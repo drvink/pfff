@@ -77,7 +77,7 @@ val get_byte : region -> pos:int -> int
 val set_byte : region -> pos:int -> int -> unit
 val blit : src:region -> dst:region -> unit
 
-val region_of_string : string -> region
+val region_of_string : bytes -> region
 (** create a region sharing a string *)
 val string_of_region : region -> string
 (** copy the contents of the region to a string *)

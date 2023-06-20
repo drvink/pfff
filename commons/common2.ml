@@ -3003,10 +3003,9 @@ let read_file_orig file = cat file +> unlines
 let read_file file =
   let ic = open_in file  in
   let size = in_channel_length ic in
-  let buf = String.create size in
-  really_input ic buf 0 size;
+  let s = really_input_string ic size in
   close_in ic;
-  buf
+  s
 
 
 let write_file ~file s =
@@ -5444,7 +5443,7 @@ let parserCommon lexbuf parserer lexer =
     let result = parserer lexer lexbuf in
     result
   with Parsing.Parse_error ->
-    print_string "buf: "; print_string lexbuf.Lexing.lex_buffer;
+    print_string "buf: "; print_bytes lexbuf.Lexing.lex_buffer;
     print_string "\n";
     print_string "current: "; print_int lexbuf.Lexing.lex_curr_pos;
     print_string "\n";

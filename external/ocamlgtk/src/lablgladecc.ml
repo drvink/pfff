@@ -180,14 +180,14 @@ exception Unsupported
 (* map arbitrary strings to caml identifiers. Clashes may occur! *) 
 
 let camlize s = match s with 
-  | "" -> "_"
-  |  s -> let s = String.uncapitalize s in
-     for i = 0 to String.length s - 1 do 
-       match s.[i] with
+  | s' when Bytes.equal Bytes.empty (Bytes.of_string s') -> "_"
+  |  s -> let s = Bytes.of_string (String.uncapitalize s) in
+     for i = 0 to Bytes.length s - 1 do
+       match Bytes.get s i with
        | 'a'..'z'| 'A'..'Z' | '0'..'9' -> ()
-       | _ -> s.[i] <- '_'
+       | _ -> Bytes.set s i '_'
      done;
-     s
+     Bytes.unsafe_to_string s
 
 (* this name is a default one created by glade? *)
 let is_default_name s =
@@ -351,10 +351,10 @@ let process ?(file="<stdin>") chan =
   let lexbuf, data =
     if !embed then begin
       let b = Buffer.create 1024 in
-      let buf = String.create 1024 in
+      let buf = Bytes.create 1024 in
       while
         let len = input chan buf 0 1024 in
-        Buffer.add_substring b buf 0 len;
+        Buffer.add_subbytes b buf 0 len;
         len > 0
       do () done;
       let data = Buffer.contents b in

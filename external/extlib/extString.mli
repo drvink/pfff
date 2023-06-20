@@ -147,13 +147,13 @@ module String :
 
 	val length : string -> int
 	val get : string -> int -> char
-	val set : string -> int -> char -> unit
-	val create : int -> string
+	val set : bytes -> int -> char -> unit
+	val create : int -> bytes
 	val make : int -> char -> string
 	val copy : string -> string
 	val sub : string -> int -> int -> string
-	val fill : string -> int -> int -> char -> unit
-	val blit : string -> int -> string -> int -> int -> unit
+	val fill : bytes -> int -> int -> char -> unit
+	val blit : string -> int -> bytes -> int -> int -> unit
 	val concat : string -> string list -> string
 	val iter : (char -> unit) -> string -> unit
 	val escaped : string -> string
@@ -175,8 +175,8 @@ module String :
 	(**/**)
 
 	external unsafe_get : string -> int -> char = "%string_unsafe_get"
-	external unsafe_set : string -> int -> char -> unit = "%string_unsafe_set"
-	external unsafe_blit : string -> int -> string -> int -> int -> unit = "caml_blit_string" "noalloc"
-	external unsafe_fill : string -> int -> int -> char -> unit = "caml_fill_string" "noalloc"
+	external unsafe_set : bytes -> int -> char -> unit = "%string_unsafe_set"
+	external unsafe_blit : string -> int -> bytes -> int -> int -> unit = "caml_blit_string" "noalloc"
+	external unsafe_fill : bytes -> int -> int -> char -> unit = "caml_fill_string" "noalloc"
 
   end

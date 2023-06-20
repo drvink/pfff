@@ -20,13 +20,13 @@
 
 type input = {
 	mutable in_read : unit -> char;
-	mutable in_input : string -> int -> int -> int;
+	mutable in_input : bytes -> int -> int -> int;
 	mutable in_close : unit -> unit;
 }
 
 type 'a output = {
 	mutable out_write : char -> unit;
-	mutable out_output : string -> int -> int -> int;
+	mutable out_output : bytes -> int -> int -> int;
 	mutable out_close : unit -> 'a;
 	mutable out_flush : unit -> unit;
 }
@@ -60,9 +60,9 @@ let read i = i.in_read()
 let nread i n =
 	if n < 0 then invalid_arg "IO.nread";
 	if n = 0 then
-		""
+		String.empty
 	else
-	let s = String.create n in
+	let s = Bytes.create n in
 	let l = ref n in
 	let p = ref 0 in
 	try
@@ -72,19 +72,20 @@ let nread i n =
 			p := !p + r;
 			l := !l - r;
 		done;
-		s
+		Bytes.unsafe_to_string s
 	with
 		No_more_input as e ->
 			if !p = 0 then raise e;
-			String.sub s 0 !p
+			Bytes.sub_string s 0 !p
 
 let really_output o s p l' =
 	let sl = String.length s in
 	if p + l' > sl || p < 0 || l' < 0 then invalid_arg "IO.really_output";
    	let l = ref l' in
 	let p = ref p in
+	let b = Bytes.unsafe_of_string s in
 	while !l > 0 do 
-		let w = o.out_output s !p !l in
+		let w = o.out_output b !p !l in
 		if w = 0 then raise Sys_blocked_io;
 		p := !p + w;
 		l := !l - w;
@@ -92,7 +93,7 @@ let really_output o s p l' =
 	l'
 
 let input i s p l =
-	let sl = String.length s in
+	let sl = Bytes.length s in
 	if p + l > sl || p < 0 || l < 0 then invalid_arg "IO.input";
 	if l = 0 then
 		0
@@ -100,7 +101,7 @@ let input i s p l =
 		i.in_input s p l
 
 let really_input i s p l' =
-	let sl = String.length s in
+	let sl = Bytes.length s in
 	if p + l' > sl || p < 0 || l' < 0 then invalid_arg "IO.really_input";
 	let l = ref l' in
 	let p = ref p in
@@ -114,12 +115,12 @@ let really_input i s p l' =
 
 let really_nread i n =
 	if n < 0 then invalid_arg "IO.really_nread";
-	if n = 0 then ""
+	if n = 0 then String.empty
 	else
-	let s = String.create n 
+	let s = Bytes.create n
 	in
 	ignore(really_input i s 0 n);
-	s
+	Bytes.unsafe_to_string s
 
 let close_in i =
 	let f _ = raise Input_closed in
@@ -133,8 +134,9 @@ let write o x = o.out_write x
 let nwrite o s =
 	let p = ref 0 in
 	let l = ref (String.length s) in
+	let b = Bytes.unsafe_of_string s in
 	while !l > 0 do
-		let w = o.out_output s !p !l in
+		let w = o.out_output b !p !l in
 		if w = 0 then raise Sys_blocked_io;
 		p := !p + w;
 		l := !l - w;
@@ -143,7 +145,7 @@ let nwrite o s =
 let output o s p l =
 	let sl = String.length s in
 	if p + l > sl || p < 0 || l < 0 then invalid_arg "IO.output";
-	o.out_output s p l
+	o.out_output (Bytes.unsafe_of_string s) p l
 
 let printf o fmt =
 	Printf.kprintf (fun s -> nwrite o s) fmt
@@ -173,11 +175,11 @@ let read_all i =
 		loop()
 	with
 		No_more_input ->
-			let buf = String.create !pos in
+			let buf = Bytes.create !pos in
 			List.iter (fun (s,p) ->
-				String.unsafe_blit s 0 buf p (String.length s)
+				Bytes.blit_string s 0 buf p (String.length s)
 			) !str;
-			buf
+			Bytes.unsafe_to_string buf
 
 let pos_in i =
 	let p = ref 0 in
@@ -224,10 +226,10 @@ let input_string s =
 			incr pos;
 			c
 		);
-		in_input = (fun sout p l ->
+		in_input = (fun bout p l ->
 			if !pos >= len then raise No_more_input;
 			let n = (if !pos + l > len then len - !pos else l) in
-			String.unsafe_blit s !pos sout p n;
+			Bytes.blit_string s !pos bout p n;
 			pos := !pos + n;
 			n
 		);
@@ -241,7 +243,7 @@ let output_string() =
 			Buffer.add_char b c
 		);
 		out_output = (fun s p l ->
-			Buffer.add_substring b s p l;
+			Buffer.add_subbytes b s p l;
 			l
 		);
 		out_close = (fun () -> Buffer.contents b);
@@ -290,7 +292,7 @@ let input_enum e =
 					match Enum.get e with
 					| None -> l
 					| Some c ->
-						String.unsafe_set s p c;
+						Bytes.unsafe_set s p c;
 						loop (p + 1) (l - 1)
 			in
 			let k = loop p l in
@@ -307,7 +309,7 @@ let output_enum() =
 			Buffer.add_char b x
 		);
 		out_output = (fun s p l ->
-			Buffer.add_substring b s p l;
+			Buffer.add_subbytes b s p l;
 			l
 		);
 		out_close = (fun () ->
@@ -344,7 +346,7 @@ let pipe() =
 		Buffer.add_char output c
 	in
 	let output s p l =
-		Buffer.add_substring output s p l;
+		Buffer.add_subbytes output s p l;
 		l
 	in
 	let input = {
@@ -687,7 +689,7 @@ class in_channel ch =
 
 class out_channel ch =
   object
-	method output s pos len = output ch s pos len
+	method output b pos len = output ch (Bytes.to_string b) pos len
 	method flush() = flush ch
 	method close_out() = ignore(close_out ch)
   end
@@ -706,11 +708,11 @@ class out_chars ch =
   end
 
 let from_in_channel ch =
-	let cbuf = String.create 1 in
+	let cbuf = Bytes.create 1 in
 	let read() =
 		try
 			if ch#input cbuf 0 1 = 0 then raise Sys_blocked_io;
-			String.unsafe_get cbuf 0
+			Bytes.unsafe_get cbuf 0
 		with
 			End_of_file -> raise No_more_input
 	in
@@ -723,9 +725,9 @@ let from_in_channel ch =
 		~close:ch#close_in
 
 let from_out_channel ch =
-	let cbuf = String.create 1 in
+	let cbuf = Bytes.create 1 in
 	let write c =
-		String.unsafe_set cbuf 0 c;
+		Bytes.unsafe_set cbuf 0 c;
 		if ch#output cbuf 0 1 = 0 then raise Sys_blocked_io;
 	in
 	let output s p l =
@@ -742,7 +744,7 @@ let from_in_chars ch =
 		let i = ref 0 in
 		try
 			while !i < l do
-				String.unsafe_set s (p + !i) (ch#get());
+				Bytes.unsafe_set s (p + !i) (ch#get());
 				incr i
 			done;
 			l
@@ -758,7 +760,7 @@ let from_in_chars ch =
 let from_out_chars ch =
 	let output s p l =
 		for i = p to p + l - 1 do
-			ch#put (String.unsafe_get s i)
+			ch#put (Bytes.unsafe_get s i)
 		done;
 		l
 	in

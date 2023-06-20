@@ -28,7 +28,7 @@ external get : string -> int -> char = "%string_safe_get"
    if [n] is outside the range 0 to [(String.length s - 1)]. *)
 
 
-external set : string -> int -> char -> unit = "%string_safe_set"
+external set : bytes -> int -> char -> unit = "%bytes_safe_set"
 (** [String.set s n c] modifies string [s] in place,
    replacing the character number [n] by [c].
    You can also write [s.[n] <- c] instead of [String.set s n c].

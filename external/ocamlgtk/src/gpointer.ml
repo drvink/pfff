@@ -138,13 +138,13 @@ let blit ~src ~dst =
 
 (* Making a region from a string is easy *)
 let region_of_string =
-  unsafe_create_region ~path:[||] ~get_length:String.length
+  unsafe_create_region ~path:[||] ~get_length:Bytes.length
 
 let string_of_region reg =
-  let s = String.create reg.length in
+  let s = Bytes.create reg.length in
   let reg' = region_of_string s in
   unsafe_blit reg reg';
-  s
+  Bytes.unsafe_to_string s
 
 (* Access bigarrays breaking the abstraction... dirty *)
 type 'a bigarray = (int, Bigarray.int8_unsigned_elt, 'a) Bigarray.Array1.t
