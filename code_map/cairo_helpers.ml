@@ -49,17 +49,18 @@ let prepare_string s =
   | _ when s ==~ re_tab -> 
       Str.global_replace (Str.regexp "\t") "        " s
   | _ ->
-    for i = 0 to String.length s -.. 1 do
-      let c = String.get s i in
+    let s = Bytes.of_string s in
+    for i = 0 to Bytes.length s -.. 1 do
+      let c = Bytes.get s i in
       if int_of_char c >= 128
-      then String.set s i 'Z'
+      then Bytes.set s i 'Z'
       else 
         (* still useful now that have re_tab case above? *)
         if c = '\t'
-        then String.set s i ' '
+        then Bytes.set s i ' '
       else ()
     done;
-    s
+    Bytes.unsafe_to_string s
 
 let show_text2 cr s =
   (* this 'if' is only for compatibility with old versions of cairo

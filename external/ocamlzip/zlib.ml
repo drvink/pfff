@@ -28,14 +28,14 @@ type flush_command =
 
 external deflate_init: int -> bool -> stream = "camlzip_deflateInit"
 external deflate:
-  stream -> string -> int -> int -> string -> int -> int -> flush_command
+  stream -> bytes -> int -> int -> bytes -> int -> int -> flush_command
          -> bool * int * int
   = "camlzip_deflate_bytecode" "camlzip_deflate"
 external deflate_end: stream -> unit = "camlzip_deflateEnd"
 
 external inflate_init: bool -> stream = "camlzip_inflateInit"
 external inflate:
-  stream -> string -> int -> int -> string -> int -> int -> flush_command
+  stream -> bytes -> int -> int -> bytes -> int -> int -> flush_command
          -> bool * int * int
   = "camlzip_inflate_bytecode" "camlzip_inflate"
 external inflate_end: stream -> unit = "camlzip_inflateEnd"
@@ -46,8 +46,8 @@ external update_crc: int32 -> string -> int -> int -> int32
 let buffer_size = 1024
 
 let compress ?(level = 6) ?(header = true) refill flush =
-  let inbuf = String.create buffer_size
-  and outbuf = String.create buffer_size in
+  let inbuf = Bytes.create buffer_size
+  and outbuf = Bytes.create buffer_size in
   let zs = deflate_init level header in
   let rec compr inpos inavail =
     if inavail = 0 then begin
@@ -69,7 +69,7 @@ let compress ?(level = 6) ?(header = true) refill flush =
     deflate_end zs
 
 let compress_direct  ?(level = 6) ?(header = true) flush =
-  let outbuf = String.create buffer_size in
+  let outbuf = Bytes.create buffer_size in
   let zs = deflate_init level header in
   let rec compr inbuf inpos inavail =
     if inavail = 0 then ()
@@ -81,15 +81,15 @@ let compress_direct  ?(level = 6) ?(header = true) flush =
     end
   and compr_finish () =
     let (finished, _, used_out) =
-      deflate zs "" 0 0 outbuf 0 buffer_size Z_FINISH in
+      deflate zs Bytes.empty 0 0 outbuf 0 buffer_size Z_FINISH in
     flush outbuf used_out;
     if not finished then compr_finish()
   in
   compr, compr_finish
 
 let uncompress ?(header = true) refill flush =
-  let inbuf = String.create buffer_size
-  and outbuf = String.create buffer_size in
+  let inbuf = Bytes.create buffer_size
+  and outbuf = Bytes.create buffer_size in
   let zs = inflate_init header in
   let rec uncompr inpos inavail =
     if inavail = 0 then begin

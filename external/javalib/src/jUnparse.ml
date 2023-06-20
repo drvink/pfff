@@ -73,7 +73,7 @@ let unparse_constant ch consts =
 	write_string ch consts (unparse_descriptor signature)
     | ConstStringUTF8 s ->
 	write_ui8 ch 1;
-	write_string_with_length write_ui16 ch s
+	write_string_with_length write_ui16 ch (Bytes.of_string s)
     | ConstUnusable -> ()
 
 let unparse_constant_pool ch consts =
@@ -148,7 +148,7 @@ let unparse_stackmap_attribute consts stackmap =
 	 unparse_verification_type_list consts ch lt;
 	 unparse_verification_type_list consts ch st)
       stackmap;
-    ("StackMap",close_out ch)
+    ("StackMap",Bytes.to_string (close_out ch))
 
 let unparse_stackmap_table_attribute consts stackmap_attribute =
   let ch = output_string ()
@@ -184,7 +184,7 @@ let unparse_stackmap_table_attribute consts stackmap_attribute =
 	       unparse_verification_type_list consts ch lvtypes;
 	       unparse_verification_type_list consts ch svtypes
       ) stackmap_attribute;
-    ("StackMapTable",close_out ch)
+    ("StackMapTable",Bytes.to_string (close_out ch))
 
 
 let rec unparse_element_value =
@@ -283,7 +283,7 @@ let rec unparse_attribute_to_strings consts =
     function
       | AttributeSignature s ->
 	  write_string ch consts s;
-	  ("Signature",close_out ch)
+	  ("Signature",Bytes.to_string (close_out ch))
       | AttributeEnclosingMethod (cn,mso) ->
 	  write_class ch consts cn;
 	  (match mso with
@@ -291,20 +291,20 @@ let rec unparse_attribute_to_strings consts =
                  write_name_and_type ch consts (n,t)
 	     | None ->
 		 write_ui16 ch 0);
-	  ("EnclosingMethod", close_out ch)
+	  ("EnclosingMethod", Bytes.to_string (close_out ch))
       | AttributeSourceDebugExtension s ->
 	  ("SourceDebugExtension", s)
       | AttributeSourceFile s ->
 	  write_string ch consts s;
-	  ("SourceFile",close_out ch)
+	  ("SourceFile",Bytes.to_string (close_out ch))
       | AttributeConstant c ->
 	  write_value ch consts c;
-	  ("ConstantValue",close_out ch)
+	  ("ConstantValue",Bytes.to_string (close_out ch))
       | AttributeExceptions l ->
 	  write_with_size write_ui16 ch
 	    (function c -> write_class ch consts c)
 	    l;
-	  ("Exceptions",close_out ch)
+	  ("Exceptions",Bytes.to_string (close_out ch))
       | AttributeInnerClasses l ->
 	  write_with_size write_ui16 ch
 	    (function inner, outer, inner_name, flags ->
@@ -320,16 +320,16 @@ let rec unparse_attribute_to_strings consts =
 		      write_string ch consts inner_name);
 	       write_ui16 ch (unparse_flags innerclass_flags flags))
 	    l;
-	  ("InnerClasses",close_out ch)
+	  ("InnerClasses",Bytes.to_string (close_out ch))
       | AttributeSynthetic ->
-	  ("Synthetic",close_out ch)
+	  ("Synthetic",Bytes.to_string (close_out ch))
       | AttributeLineNumberTable l ->
 	  write_with_size write_ui16 ch
 	    (function pc, line ->
 	       write_ui16 ch pc;
 	       write_ui16 ch line)
 	    l;
-	  ("LineNumberTable",close_out ch)
+	  ("LineNumberTable",Bytes.to_string (close_out ch))
       | AttributeLocalVariableTable l ->
 	  write_with_size write_ui16 ch
 	    (function start_pc, length, name, signature, index ->
@@ -339,7 +339,7 @@ let rec unparse_attribute_to_strings consts =
 	       write_string ch consts (unparse_value_type signature);
 	       write_ui16 ch index)
 	    l;
-	  ("LocalVariableTable",close_out ch)
+	  ("LocalVariableTable",Bytes.to_string (close_out ch))
       | AttributeLocalVariableTypeTable l ->
           write_with_size write_ui16 ch
             (function start_pc, length, name, signature, index ->
@@ -349,9 +349,9 @@ let rec unparse_attribute_to_strings consts =
                write_string ch consts (unparse_FieldTypeSignature signature);
                write_ui16 ch index)
             l;
-          ("LocalVariableTypeTable", close_out ch)
+          ("LocalVariableTypeTable", Bytes.to_string (close_out ch))
       | AttributeDeprecated ->
-	  ("Deprecated",close_out ch)
+	  ("Deprecated",Bytes.to_string (close_out ch))
       | AttributeStackMap s ->
 	  ignore (close_out ch);
 	  unparse_stackmap_attribute consts s
@@ -362,19 +362,19 @@ let rec unparse_attribute_to_strings consts =
 	  (name,contents)
       | AttributeAnnotationDefault ev ->
           unparse_element_value consts ch ev;
-          ("AnnotationDefault",close_out ch)
+          ("AnnotationDefault",Bytes.to_string (close_out ch))
       | AttributeRuntimeVisibleAnnotations annots ->
           unparse_annotations consts ch annots;
-          ("RuntimeVisibleAnnotations", close_out ch)
+          ("RuntimeVisibleAnnotations", Bytes.to_string (close_out ch))
       | AttributeRuntimeInvisibleAnnotations annots ->
           unparse_annotations consts ch annots;
-          ("RuntimeInvisibleAnnotations", close_out ch)
+          ("RuntimeInvisibleAnnotations", Bytes.to_string (close_out ch))
       | AttributeRuntimeVisibleParameterAnnotations param_annots ->
           unparse_parameter_annotations consts ch param_annots;
-          ("RuntimeVisibleParameterAnnotations", close_out ch)
+          ("RuntimeVisibleParameterAnnotations", Bytes.to_string (close_out ch))
       | AttributeRuntimeInvisibleParameterAnnotations param_annots ->
           unparse_parameter_annotations consts ch param_annots;
-          ("RuntimeInvisibleParameterAnnotations", close_out ch)
+          ("RuntimeInvisibleParameterAnnotations", Bytes.to_string (close_out ch))
       | AttributeCode code ->
 	  let code = Lazy.force code in
 	    write_ui16 ch code.c_max_stack;
@@ -394,13 +394,13 @@ let rec unparse_attribute_to_strings consts =
 	    write_with_size write_ui16 ch
 	      (unparse_attribute ch consts)
 	      code.c_attributes;
-	    ("Code",close_out ch)
+	    ("Code",Bytes.to_string (close_out ch))
 
 and unparse_attribute ch consts attr =
   let (name,content) = unparse_attribute_to_strings consts attr
   in
     write_string ch consts name;
-    write_string_with_length write_i32 ch content
+    write_string_with_length write_i32 ch (Bytes.of_string content)
 
 (* Fields, methods and classes *)
 (*******************************)

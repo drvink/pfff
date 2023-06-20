@@ -30,7 +30,7 @@ val input_chars : in_channel -> char Enum.t
 val input_list : in_channel -> string list
 (** Returns the list of lines read from an input channel. *)
 
-val input_all : in_channel -> string
+val input_all : in_channel -> bytes
 (** Return the whole contents of an input channel as a single
  string. *)
 
@@ -40,7 +40,7 @@ val print_bool : bool -> unit
 val prerr_bool : bool -> unit
 (** Print a boolean to stderr. *)
 
-val input_file : ?bin:bool -> string -> string
+val input_file : ?bin:bool -> string -> bytes
 (** returns the data of a given filename. *)
 
 val output_file : filename:string -> text:string -> unit

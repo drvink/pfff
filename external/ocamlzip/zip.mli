@@ -70,7 +70,7 @@ val find_entry: in_file -> string -> entry
               significant.  File names must use [/] (slash) as the directory
               separator.  The name of a directory must end with a trailing 
               [/] (slash). *)
-val read_entry: in_file -> entry -> string
+val read_entry: in_file -> entry -> bytes
           (** [Zip.read_entry zf e] reads and uncompresses the data
               (file contents) associated with entry [e] of ZIP file [zf].
               The data is returned as a character string. *)
@@ -146,7 +146,7 @@ val copy_file_to_entry:
 val add_entry_generator:
   out_file ->
     ?extra: string -> ?comment: string -> ?level: int ->
-    ?mtime: float -> string -> (string -> int -> int -> unit) * (unit -> unit)
+    ?mtime: float -> string -> (bytes -> int -> int -> unit) * (unit -> unit)
           (** [Zip.add_entry_generator zf name] returns a pair of functions
               [(add, finish)].  It adds a new entry to the 
               ZIP file [zf].  The file name stored along with this entry

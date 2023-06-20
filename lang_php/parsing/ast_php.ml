@@ -297,7 +297,7 @@ and expr =
 
     and scalar =
       | C of constant
-      | Guil    of tok (* '"' or b'"' *) * encaps list * tok (* '"' *)
+      | Guil of tok * encaps list * tok
       | HereDoc of
           tok (* < < < EOF, or b < < < EOF *) *
           encaps list *

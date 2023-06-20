@@ -218,27 +218,27 @@ let dump_java6_stackmap ch frame =
     | FullFrame (k,offset,locals,stack) ->
 	IO.printf ch "FullFrame(tag:%d," k;
 	dump_stackmap ch (offset,locals,stack);
-	IO.nwrite ch ")\n"
+	IO.nwrite ch (Bytes.of_string ")\n")
 
 let dump_inner_classes ch icl =
   List.iter
     (fun (ic,oc,icsource,iflags) ->
-       IO.nwrite ch "\n      ";
+       IO.nwrite ch (Bytes.of_string "\n      ");
        (* flags oc.ic (named icsource at source) *)
-       IO.nwrite ch (access_flags iflags);
+       IO.nwrite ch (Bytes.of_string (access_flags iflags));
        IO.write ch ' ';
        (match oc with
           | None -> ()
           | Some ocname -> 
-              IO.nwrite ch (cn_name ocname);
+              IO.nwrite ch (Bytes.of_string (cn_name ocname));
               IO.write ch '.');
        (match ic with
           | None -> IO.write ch '_'
-          | Some icname -> IO.nwrite ch (cn_name icname));
+          | Some icname -> IO.nwrite ch (Bytes.of_string (cn_name icname)));
        (match icsource with
-          | None -> IO.nwrite ch " (anonymous in source)"
+          | None -> IO.nwrite ch (Bytes.of_string " (anonymous in source)")
           | Some icname ->
-              IO.nwrite ch (" (named "^icname^" in the source)"));
+              IO.nwrite ch (Bytes.of_string (" (named "^icname^" in the source)")));
     )
     icl
 
@@ -252,66 +252,66 @@ let dump_list sep print = function
 
 let rec dump_element_value ch = function
   | EVCstByte cst ->
-      IO.nwrite ch (string_of_int cst)
+      IO.nwrite ch (Bytes.of_string (string_of_int cst))
   | EVCstChar cst ->
-      IO.nwrite ch "char ";
-      IO.nwrite ch (string_of_int cst)
+      IO.nwrite ch (Bytes.of_string "char ");
+      IO.nwrite ch (Bytes.of_string (string_of_int cst))
   | EVCstInt cst ->
-      IO.nwrite ch (Int32.to_string cst)
+      IO.nwrite ch (Bytes.of_string (Int32.to_string cst))
   | EVCstShort cst ->
-      IO.nwrite ch (string_of_int cst)
+      IO.nwrite ch (Bytes.of_string (string_of_int cst))
   | EVCstBoolean cst ->
-      IO.nwrite ch (if cst = 0 then "false" else "true");
+      IO.nwrite ch (Bytes.of_string (if cst = 0 then "false" else "true"));
   | EVCstDouble cst ->
-      IO.nwrite ch (string_of_float cst)
+      IO.nwrite ch (Bytes.of_string (string_of_float cst))
   | EVCstFloat cst ->
-      IO.nwrite ch (string_of_float cst);
-      IO.nwrite ch "f"      
+      IO.nwrite ch (Bytes.of_string (string_of_float cst));
+      IO.nwrite ch (Bytes.of_string "f")
   | EVCstLong cst ->
-      IO.nwrite ch (Int64.to_string cst);
-      IO.nwrite ch "L"
+      IO.nwrite ch (Bytes.of_string (Int64.to_string cst));
+      IO.nwrite ch (Bytes.of_string "L")
   | EVCstString cst ->
-      IO.nwrite ch "\"";
+      IO.nwrite ch (Bytes.of_string "\"");
       for i = 0 to (String.length cst) - 1 do
         match cst.[i] with
-          | '\\' -> IO.nwrite ch "\\\\"  (* writes 2 slashes (but escaped) *)
-          | '"' -> IO.nwrite ch "\\\""  (* writes backslash and doublequote (but escaped) *)
+          | '\\' -> IO.nwrite ch (Bytes.of_string "\\\\")  (* writes 2 slashes (but escaped) *)
+          | '"' -> IO.nwrite ch (Bytes.of_string "\\\"")  (* writes backslash and doublequote (but escaped) *)
           | c -> IO.write ch c
       done;
-      IO.nwrite ch "\""
+      IO.nwrite ch (Bytes.of_string "\"")
   | EVEnum (s1,s2) ->
-      IO.nwrite ch (cn_name s1 ^ "." ^ s2)
+      IO.nwrite ch (Bytes.of_string (cn_name s1 ^ "." ^ s2))
   | EVClass None ->
-      IO.nwrite ch "Void.class"
+      IO.nwrite ch (Bytes.of_string "Void.class")
   | EVClass (Some vt) ->
-      IO.nwrite ch (value_signature ~jvm:true vt)
+      IO.nwrite ch (Bytes.of_string (value_signature ~jvm:true vt))
   | EVAnnotation annot ->
       dump_annotation ch annot
   | EVArray evlist ->
-      IO.nwrite ch "[|";
-      dump_list (fun () -> IO.nwrite ch "; ") (dump_element_value ch) evlist;
-      IO.nwrite ch "|]"
+      IO.nwrite ch (Bytes.of_string "[|");
+      dump_list (fun () -> IO.nwrite ch (Bytes.of_string "; ")) (dump_element_value ch) evlist;
+      IO.nwrite ch (Bytes.of_string "|]")
 
 and dump_annotation ch annot =
   let dump_pair (s,ev) =
-    IO.nwrite ch s;
-    IO.nwrite ch " = ";
+    IO.nwrite ch (Bytes.of_string s);
+    IO.nwrite ch (Bytes.of_string " = ");
     dump_element_value ch ev
   in
   let dump_pairs pairs =
-    dump_list (fun () -> IO.nwrite ch ", ") dump_pair pairs
+    dump_list (fun () -> IO.nwrite ch (Bytes.of_string ", ")) dump_pair pairs
   in
     IO.write ch '@';
-    IO.nwrite ch (JBasics.cn_name annot.kind);
+    IO.nwrite ch (Bytes.of_string (JBasics.cn_name annot.kind));
     IO.write ch '(';
     dump_pairs annot.element_value_pairs;
     IO.write ch ')'
 
 let rec dump_code ch consts code =
-  IO.nwrite ch "    max_stack = ";
-  IO.nwrite ch (string_of_int code.JClassLow.c_max_stack);
-  IO.nwrite ch " , max_locals = ";
-  IO.nwrite ch (string_of_int code.JClassLow.c_max_locals);
+  IO.nwrite ch (Bytes.of_string "    max_stack = ");
+  IO.nwrite ch (Bytes.of_string (string_of_int code.JClassLow.c_max_stack));
+  IO.nwrite ch (Bytes.of_string " , max_locals = ");
+  IO.nwrite ch (Bytes.of_string (string_of_int code.JClassLow.c_max_locals));
   IO.write ch '\n';
   Array.iteri (fun i c ->
 		 match c with
@@ -321,7 +321,7 @@ let rec dump_code ch consts code =
   if code.JClassLow.c_exc_tbl <> []
   then
     begin
-      IO.nwrite ch "    exceptions";
+      IO.nwrite ch (Bytes.of_string "    exceptions");
       List.iter (dump_exc ch consts) code.JClassLow.c_exc_tbl;
       IO.write ch '\n';
     end;
@@ -333,27 +333,27 @@ and dump_attrib ch consts = function
   | AttributeSignature s ->
       IO.printf ch "    signature = %s\n" s
   | AttributeEnclosingMethod (cn,mso) ->
-      IO.nwrite ch "    enclosing method : class = ";
-      IO.nwrite ch (JDumpBasics.class_name cn);
-      IO.nwrite ch ", method = ";
+      IO.nwrite ch (Bytes.of_string "    enclosing method : class = ");
+      IO.nwrite ch (Bytes.of_string (JDumpBasics.class_name cn));
+      IO.nwrite ch (Bytes.of_string ", method = ");
       (match mso with
-	 | None -> IO.nwrite ch "None"
-	 | Some (mn,ms) -> IO.nwrite ch (JDumpBasics.signature mn ms));
+	 | None -> IO.nwrite ch (Bytes.of_string "None")
+	 | Some (mn,ms) -> IO.nwrite ch (Bytes.of_string (JDumpBasics.signature mn ms)));
       IO.write ch '\n'
   | AttributeSourceDebugExtension s ->
-      IO.nwrite ch ("    SourceDebugExtension = "^s^"\n")
+      IO.nwrite ch (Bytes.of_string ("    SourceDebugExtension = "^s^"\n"))
   | AttributeConstant c ->
-      IO.nwrite ch "    const ";
+      IO.nwrite ch (Bytes.of_string "    const ");
       dump_constant_value ch c;
       IO.write ch '\n';
   | AttributeCode code ->
       dump_code ch consts (Lazy.force code) (* IO.printf ch "    unexpected code attribute" *)
   | AttributeExceptions l ->
-      IO.nwrite ch "    exceptions";
-      List.iter (fun cn -> IO.nwrite ch (class_name cn^" ")) l;
+      IO.nwrite ch (Bytes.of_string "    exceptions");
+      List.iter (fun cn -> IO.nwrite ch (Bytes.of_string (class_name cn^" "))) l;
       IO.write ch '\n'
   | AttributeInnerClasses icl ->
-      IO.nwrite ch "    inner-classes:";
+      IO.nwrite ch (Bytes.of_string "    inner-classes:");
       dump_inner_classes ch icl;
       IO.write ch '\n'
   | AttributeSynthetic ->
@@ -362,11 +362,11 @@ and dump_attrib ch consts = function
       IO.printf ch "    LineNumberTable";
       List.iter
         (fun (i1,i2) ->
-           IO.nwrite ch ("\n      " ^string_of_int i1 ^ ":" ^string_of_int i2))
+           IO.nwrite ch (Bytes.of_string ("\n      " ^string_of_int i1 ^ ":" ^string_of_int i2)))
         lines;
       IO.write ch '\n'
   | AttributeLocalVariableTable variables ->
-      IO.nwrite ch "    local-variables\n";
+      IO.nwrite ch (Bytes.of_string "    local-variables\n");
       List.iter
 	(function start_pc, length, name, signature, index ->
 	   IO.printf ch "      from %d to %d, %s %s at %d\n"
@@ -377,7 +377,7 @@ and dump_attrib ch consts = function
 	     index)
 	variables
   | AttributeLocalVariableTypeTable variables ->
-      IO.nwrite ch "    generic-local-variables\n";
+      IO.nwrite ch (Bytes.of_string "    generic-local-variables\n");
       List.iter
 	(function start_pc, length, name, signature, index ->
 	   IO.printf ch "      from %d to %d, %s %s at %d\n"
@@ -388,55 +388,55 @@ and dump_attrib ch consts = function
 	     index)
 	variables
   | AttributeDeprecated ->
-      IO.nwrite ch "    deprecated\n"
+      IO.nwrite ch (Bytes.of_string "    deprecated\n")
   | AttributeStackMap stackmap_frames ->
-      IO.nwrite ch "    stackmap midp = [";
+      IO.nwrite ch (Bytes.of_string "    stackmap midp = [");
       List.iter (dump_stackmap ch) stackmap_frames;
-      IO.nwrite ch "]\n"
+      IO.nwrite ch (Bytes.of_string "]\n")
   | AttributeStackMapTable stackmap_frames ->
-      IO.nwrite ch "    stackmap java6 = [";
+      IO.nwrite ch (Bytes.of_string "    stackmap java6 = [");
       List.iter (dump_java6_stackmap ch) stackmap_frames;
-      IO.nwrite ch "]\n"
+      IO.nwrite ch (Bytes.of_string "]\n")
   | AttributeAnnotationDefault a ->
-      IO.nwrite ch "    AnnotationDefault = ";
+      IO.nwrite ch (Bytes.of_string "    AnnotationDefault = ");
       dump_element_value ch a;
       IO.write ch '\n'
   | AttributeRuntimeVisibleAnnotations al ->
-      IO.nwrite ch "    RuntimeVisibleAnnotations";
+      IO.nwrite ch (Bytes.of_string "    RuntimeVisibleAnnotations");
       List.iter
         (fun a ->
-           IO.nwrite ch "\n        ";
+           IO.nwrite ch (Bytes.of_string "\n        ");
            dump_annotation ch a)
         al;
       IO.write ch '\n'
   | AttributeRuntimeInvisibleAnnotations al ->
-      IO.nwrite ch "    RuntimeInvisibleAnnotations";
+      IO.nwrite ch (Bytes.of_string "    RuntimeInvisibleAnnotations");
       List.iter
         (fun a ->
-           IO.nwrite ch "\n      ";
+           IO.nwrite ch (Bytes.of_string "\n      ");
            dump_annotation ch a)
         al;
       IO.write ch '\n'
   | AttributeRuntimeInvisibleParameterAnnotations all ->
-      IO.nwrite ch "    RuntimeInvisibleParameterAnnotations = ";
+      IO.nwrite ch (Bytes.of_string "    RuntimeInvisibleParameterAnnotations = ");
       List.iter
         (fun al -> 
-           IO.nwrite ch "\n      [";
-           dump_list (fun () -> IO.nwrite ch ", ") (dump_annotation ch) al;
+           IO.nwrite ch (Bytes.of_string "\n      [");
+           dump_list (fun () -> IO.nwrite ch (Bytes.of_string ", ")) (dump_annotation ch) al;
            IO.write ch ']')
         all;
       IO.write ch '\n'
   | AttributeRuntimeVisibleParameterAnnotations all ->
-      IO.nwrite ch "    RuntimeVisibleParameterAnnotations = ";
+      IO.nwrite ch (Bytes.of_string "    RuntimeVisibleParameterAnnotations = ");
       List.iter
         (fun al -> 
-           IO.nwrite ch "\n      [";
-           dump_list (fun () -> IO.nwrite ch ", ") (dump_annotation ch) al;
+           IO.nwrite ch (Bytes.of_string "\n      [");
+           dump_list (fun () -> IO.nwrite ch (Bytes.of_string ", ")) (dump_annotation ch) al;
            IO.write ch ']')
         all;
       IO.write ch '\n'
   | AttributeUnknown (s,_) ->
-      IO.nwrite ch ("    ?"^s^"\n")
+      IO.nwrite ch (Bytes.of_string ("    ?"^s^"\n"))
 
 let dump_field ch consts f =
   IO.printf ch "  %s%s %s\n" (access_flags f.f_flags) (value_signature f.f_descriptor) f.f_name;
@@ -452,25 +452,25 @@ let dump_super ch = function
   | Some c -> IO.printf ch "  extends %s\n" (class_name c)
 
 let dump ch cl =
-  IO.nwrite ch (access_flags cl.j_flags);
+  IO.nwrite ch (Bytes.of_string (access_flags cl.j_flags));
   if List.for_all ((<>) `AccInterface) cl.j_flags
-  then IO.nwrite ch "class ";
-  IO.nwrite ch (cn_name cl.j_name);
+  then IO.nwrite ch (Bytes.of_string "class ");
+  IO.nwrite ch (Bytes.of_string (cn_name cl.j_name));
   IO.write ch '\n';
   dump_super ch cl.j_super;
   if cl.j_interfaces <> []
   then
     IO.printf ch "  implements %s\n"
       (String.concat " " (List.map class_name cl.j_interfaces));
-  IO.nwrite ch ("    version = " ^(string_of_int cl.j_version.major)
-                ^"." ^(string_of_int cl.j_version.minor) ^"\n");
+  IO.nwrite ch (Bytes.of_string ("    version = " ^(string_of_int cl.j_version.major)
+                                        ^"." ^(string_of_int cl.j_version.minor) ^"\n"));
   List.iter (dump_attrib ch cl.j_consts) cl.j_attributes;
   IO.printf ch "{\n\n";
   IO.printf ch "/* **** CONSTANTS ****\n";
   (* Put this in the dump method for high level class files *)
   Array.iteri
     (fun i c ->
-       IO.nwrite ch ("    " ^string_of_int i^"  ");
+       IO.nwrite ch (Bytes.of_string ("    " ^string_of_int i^"  "));
        dump_constant ch c;
        IO.write ch '\n'
     ) cl.j_consts;

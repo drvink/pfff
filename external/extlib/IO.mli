@@ -49,24 +49,24 @@ val read : input -> char
 (** Read a single char from an input or raise [No_more_input] if
   no input available. *)
 
-val nread : input -> int -> string
+val nread : input -> int -> bytes
 (** [nread i n] reads a string of size up to [n] from an input.
   The function will raise [No_more_input] if no input is available.
   It will raise [Invalid_argument] if [n] < 0. *)
 
-val really_nread : input -> int -> string
+val really_nread : input -> int -> bytes
 (** [really_nread i n] reads a string of exactly [n] characters
   from the input. Raises [No_more_input] if at least [n] characters are
   not available. Raises [Invalid_argument] if [n] < 0. *)
 
-val input : input -> string -> int -> int -> int
+val input : input -> bytes -> int -> int -> int
 (** [input i s p l] reads up to [l] characters from the given input, storing
   them in string [s], starting at character number [p]. It returns the actual
   number of characters read or raise [No_more_input] if no character can be
   read. It will raise [Invalid_argument] if [p] and [l] do not designate a
   valid substring of [s]. *)
 
-val really_input : input -> string -> int -> int -> int
+val really_input : input -> bytes -> int -> int -> int
 (** [really_input i s p l] reads exactly [l] characters from the given input,
   storing them in the string [s], starting at position [p]. For consistency with
   {!IO.input} it returns [l]. Raises [No_more_input] if at [l] characters are
@@ -79,15 +79,15 @@ val close_in : input -> unit
 val write : 'a output -> char -> unit
 (** Write a single char to an output. *)
 
-val nwrite : 'a output -> string -> unit
+val nwrite : 'a output -> bytes -> unit
 (** Write a string to an output. *)
 
-val output : 'a output -> string -> int -> int -> int
+val output : 'a output -> bytes -> int -> int -> int
 (** [output o s p l] writes up to [l] characters from string [s], starting at
   offset [p]. It returns the number of characters written. It will raise
   [Invalid_argument] if [p] and [l] do not designate a valid substring of [s]. *)
 
-val really_output : 'a output -> string -> int -> int -> int
+val really_output : 'a output -> bytes -> int -> int -> int
 (** [really_output o s p l] writes exactly [l] characters from string [s] onto
   the the output, starting with the character at offset [p]. For consistency with
   {!IO.output} it returns [l]. Raises [Invalid_argument] if [p] and [l] do not
@@ -105,7 +105,7 @@ val close_out : 'a output -> 'a
 val input_string : string -> input
 (** Create an input that will read from a string. *)
 
-val output_string : unit -> string output
+val output_string : unit -> bytes output
 (** Create an output that will write into a string in an efficient way.
   When closed, the output returns all the data written into it. *)
 
@@ -124,12 +124,12 @@ val output_enum : unit -> char Enum.t output
 
 val create_in :
   read:(unit -> char) ->
-  input:(string -> int -> int -> int) -> close:(unit -> unit) -> input
+  input:(bytes -> int -> int -> int) -> close:(unit -> unit) -> input
 (** Fully create an input by giving all the needed functions. *)
 
 val create_out :
   write:(char -> unit) ->
-  output:(string -> int -> int -> int) ->   
+  output:(bytes -> int -> int -> int) ->
   flush:(unit -> unit) -> close:(unit -> 'a) -> 'a output
 (** Fully create an output by giving all the needed functions. *)
 
@@ -138,7 +138,7 @@ val create_out :
 val printf : 'a output -> ('b, unit, string, unit) format4 -> 'b
 (** The printf function works for any output. *)
 
-val read_all : input -> string
+val read_all : input -> bytes
 (** read all the contents of the input until [No_more_input] is raised. *)
 
 val pipe : unit -> input * unit output
@@ -220,10 +220,10 @@ val write_i64 : 'a output -> int64 -> unit
 val write_double : 'a output -> float -> unit
 (** Write an IEEE double precision floating point value. *)
 
-val write_string : 'a output -> string -> unit
+val write_string : 'a output -> bytes -> unit
 (** Write a string and append an null character. *)
 
-val write_line : 'a output -> string -> unit
+val write_line : 'a output -> bytes -> unit
 (** Write a line and append a LF (it might be converted
 	to CRLF on some systems depending on the underlying IO). *)
 
@@ -291,13 +291,13 @@ val drop_bits : in_bits -> unit
 
 class in_channel : input ->
   object
-	method input : string -> int -> int -> int
+	method input : bytes -> int -> int -> int
 	method close_in : unit -> unit
   end
 
 class out_channel : 'a output ->
   object
-	method output : string -> int -> int -> int
+	method output : bytes -> int -> int -> int
 	method flush : unit -> unit
 	method close_out : unit -> unit
   end

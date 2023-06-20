@@ -81,10 +81,10 @@ val write_ui8 : 'a IO.output -> int -> unit
 val write_i8 : 'a IO.output -> int -> unit
 
 val write_string_with_length :
-  ('a IO.output -> int -> unit) -> 'a IO.output -> string -> unit
+  ('a IO.output -> int -> unit) -> 'a IO.output -> bytes -> unit
 val write_with_length :
   ('a IO.output -> int -> unit) ->
-  'a IO.output -> (string IO.output -> unit) -> unit
+  'a IO.output -> (bytes IO.output -> unit) -> unit
 val write_with_size :
   ('a IO.output -> int -> unit) -> 'a IO.output -> ('c -> unit) -> 'c list -> unit
 

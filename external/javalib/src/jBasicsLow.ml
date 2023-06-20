@@ -41,7 +41,7 @@ let write_i8 ch n =
     write_ui8 ch n
 
 let write_string_with_length length ch s =
-  length ch (String.length s);
+  length ch (Bytes.length s);
   nwrite ch s
 
 let write_with_length length ch write =

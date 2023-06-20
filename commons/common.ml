@@ -838,10 +838,9 @@ let cat file =
 let read_file file =
   let ic = open_in file  in
   let size = in_channel_length ic in
-  let buf = String.create size in
-  really_input ic buf 0 size;
+  let s = really_input_string ic size in
   close_in ic;
-  buf
+  s
 
 let write_file ~file s =
   let chan = open_out file in

@@ -39,7 +39,7 @@ val render_from_string :
   ?dpi:float -> 
   ?size_cb:size_fun -> 
   ?pos:int -> ?len:int ->
-  string -> GdkPixbuf.pixbuf
+  bytes -> GdkPixbuf.pixbuf
 
 (** @raise Error if an error occurs loading data *)
 (** @raise Sys_error if an error occurs while reading from the file *)

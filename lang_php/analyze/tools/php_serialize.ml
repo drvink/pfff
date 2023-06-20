@@ -94,11 +94,11 @@ let ($) f g = function x -> f (g x)
 
 (* pad: from extString.ml *)
 let string_init len f =
-  let s = String.create len in
+  let s = Bytes.create len in
   for i = 0 to len - 1 do
-    String.unsafe_set s i (f i)
+    Bytes.unsafe_set s i (f i)
   done;
-  s
+  Bytes.unsafe_to_string s
 
 (*****************************************************************************)
 (* Serialized string -> php *)

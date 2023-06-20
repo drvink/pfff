@@ -75,14 +75,14 @@ external set_size_callback : t -> size_fun -> unit
 external free_handle : t -> unit
     = "ml_rsvg_handle_free"
 external close : t -> unit = "ml_rsvg_handle_close"
-external write : t -> string -> off:int -> len:int -> unit = "ml_rsvg_handle_write"
+external write : t -> bytes -> off:int -> len:int -> unit = "ml_rsvg_handle_write"
 external get_pixbuf : t -> GdkPixbuf.pixbuf = "ml_rsvg_handle_get_pixbuf"
 external set_dpi : t -> float -> unit = "ml_rsvg_handle_set_dpi"
 external set_default_dpi : float -> unit = "ml_rsvg_set_default_dpi"
 
 type input = 
-  | Rsvg_SubString of string * int * int
-  | Rsvg_Buffer of int * (string -> int)
+  | Rsvg_SubString of bytes * int * int
+  | Rsvg_Buffer of int * (bytes -> int)
 
 let render ?(gz=false) ?dpi ?size_cb input =
   let h = if gz then new_handle_gz () else new_handle () in
@@ -93,7 +93,7 @@ let render ?(gz=false) ?dpi ?size_cb input =
     | Rsvg_SubString (s, off, len) ->
 	write h s ~off ~len
     | Rsvg_Buffer (len, fill) ->
-	let buff = String.create len in
+	let buff = Bytes.create len in
 	let c = ref (fill buff) in
 	while !c > 0 do
 	  write h buff 0 !c ;
@@ -109,7 +109,7 @@ let render ?(gz=false) ?dpi ?size_cb input =
 
 let render_from_string ?gz ?dpi ?size_cb ?pos ?len s =
   let off = Gaux.default 0 ~opt:pos in
-  let len = Gaux.default (String.length s - off) ~opt:len in
+  let len = Gaux.default (Bytes.length s - off) ~opt:len in
   render ?gz ?dpi ?size_cb 
     (Rsvg_SubString (s, off, len))
 
@@ -118,7 +118,7 @@ let render_from_file ?(gz=false) ?dpi ?size_cb fname =
   let pb = 
     try 
       render ~gz ?dpi ?size_cb
-	(Rsvg_Buffer (4096, (fun b -> input ic b 0 (String.length b))))
+	(Rsvg_Buffer (4096, (fun b -> input ic b 0 (Bytes.length b))))
     with exn ->
       close_in ic ; raise exn in
   close_in ic ;
